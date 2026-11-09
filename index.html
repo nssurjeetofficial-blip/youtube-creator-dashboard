@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>YouTube Creator Dashboard</title>
+
+  <meta name="theme-color" content="#080711">
+
+  <link rel="stylesheet" href="style.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="app-container">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="logo">
+      <span class="logo-icon">▶</span>
+      <span>YouTube<br>Dashboard</span>
+    </div>
+
+    <nav class="navigation">
+      <a href="#" class="nav-item active">⌂ <span>Overview</span></a>
+      <a href="#" class="nav-item">▥ <span>Analytics</span></a>
+      <a href="#" class="nav-item">▷ <span>Videos</span></a>
+      <a href="#" class="nav-item">♙ <span>Audience</span></a>
+      <a href="#" class="nav-item">＄ <span>Revenue</span></a>
+      <a href="#" class="nav-item">⚙ <span>Settings</span></a>
+    </nav>
+
+    <div class="switch-channel">
+      <h4>Switch Channel</h4>
+
+      <input
+        type="text"
+        id="sidebarChannelInput"
+        placeholder="Paste YouTube Link"
+      >
+
+      <button id="sidebarLoadBtn">Load Channel</button>
+    </div>
+
+    <div class="creator-box">
+      <h4>Creator Mode</h4>
+      <p id="creatorStatus">● Not Connected</p>
+      <button id="connectGoogleBtn">Connect Google</button>
+    </div>
+
+  </aside>
+
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+
+      <div class="mobile-logo">
+        ▶ YouTube Dashboard
+      </div>
+
+      <div class="channel-search">
+        <input
+          type="text"
+          id="channelInput"
+          placeholder="Paste YouTube channel link..."
+        >
+
+        <button id="loadChannelBtn">Load</button>
+      </div>
+
+      <div class="profile-icon">K</div>
+
+    </header>
+
+
+    <!-- WELCOME -->
+    <section class="welcome-section">
+
+      <div>
+        <p class="small-heading">CREATOR ANALYTICS</p>
+        <h1>Dashboard Overview</h1>
+        <p class="subtitle">
+          Track your YouTube channel performance.
+        </p>
+      </div>
+
+      <span class="live-status">● Dashboard</span>
+
+    </section>
+
+
+    <!-- CHANNEL PROFILE -->
+    <section class="channel-profile">
+
+      <div class="channel-avatar" id="channelAvatar">
+        YT
+      </div>
+
+      <div class="channel-details">
+
+        <h2 id="channelName">Your Channel Name</h2>
+
+        <p id="channelHandle">@yourchannel</p>
+
+        <p id="channelDescription">
+          Paste a YouTube channel link to get started.
+        </p>
+
+      </div>
+
+      <a
+        href="#"
+        target="_blank"
+        id="visitChannelBtn"
+        class="visit-button"
+      >
+        Visit Channel ↗
+      </a>
+
+    </section>
+
+
+    <!-- STAT CARDS -->
+    <section class="stats-grid">
+
+      <div class="stat-card">
+        <div class="stat-icon purple">♙</div>
+        <div>
+          <p>Subscribers</p>
+          <h2 id="subscriberCount">--</h2>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon green">◉</div>
+        <div>
+          <p>Total Views</p>
+          <h2 id="totalViews">--</h2>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon pink">▶</div>
+        <div>
+          <p>Total Videos</p>
+          <h2 id="totalVideos">--</h2>
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- ANALYTICS -->
+    <section class="analytics-card">
+
+      <div class="section-heading">
+        <div>
+          <h2>Channel Analytics</h2>
+          <p>Channel performance overview</p>
+        </div>
+
+        <select id="analyticsPeriod">
+          <option>Last 28 Days</option>
+          <option>Last 7 Days</option>
+          <option>Last 90 Days</option>
+        </select>
+      </div>
+
+      <div class="chart-placeholder" id="chartArea">
+        <p>Analytics chart will appear here.</p>
+      </div>
+
+    </section>
+
+
+    <!-- BOTTOM SECTION -->
+    <section class="bottom-grid">
+
+      <div class="videos-card">
+
+        <div class="section-heading">
+          <h2>Latest Videos</h2>
+          <button id="viewAllVideos">View All →</button>
+        </div>
+
+        <div id="latestVideos">
+
+          <div class="empty-state">
+            Your latest videos will appear here.
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="growth-card">
+
+        <div class="rocket-icon">🚀</div>
+
+        <h2>Grow Your Channel</h2>
+
+        <p>
+          Understand your channel performance
+          and discover new opportunities.
+        </p>
+
+        <button id="exploreTipsBtn">
+          Explore Tips →
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- FOOTER -->
+    <footer>
+      <p>© 2026 YouTube Creator Dashboard</p>
+      <p>Made for Creators ♥</p>
+    </footer>
+
+  </main>
+
+</div>
+
+
+<!-- JAVASCRIPT -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
