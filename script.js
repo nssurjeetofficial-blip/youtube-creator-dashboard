@@ -1,328 +1,371 @@
-// =====================================
+// ==========================================
 // YOUTUBE CREATOR DASHBOARD
-// =====================================
+// FRONTEND JAVASCRIPT
+// ==========================================
 
-// YouTube Data API key baad mein add karenge.
-const YOUTUBE_API_KEY = "YOUR_YOUTUBE_API_KEY";
+const API_BASE =
+  "https://youtube-dashboard-api.surjeetmaurya0981.workers.dev";
 
+// ==========================================
 // HTML ELEMENTS
-const channelInput = document.getElementById("channelInput");
-const loadChannelBtn = document.getElementById("loadChannelBtn");
+// ==========================================
 
-const sidebarInput = document.getElementById("sidebarChannelInput");
+const channelInput = document.getElementById("channelInput");
+const sidebarChannelInput = document.getElementById("sidebarChannelInput");
+
+const loadChannelBtn = document.getElementById("loadChannelBtn");
 const sidebarLoadBtn = document.getElementById("sidebarLoadBtn");
 
+const channelAvatar = document.getElementById("channelAvatar");
 const channelName = document.getElementById("channelName");
 const channelHandle = document.getElementById("channelHandle");
 const channelDescription = document.getElementById("channelDescription");
-const channelAvatar = document.getElementById("channelAvatar");
 
 const subscriberCount = document.getElementById("subscriberCount");
 const totalViews = document.getElementById("totalViews");
 const totalVideos = document.getElementById("totalVideos");
 
 const visitChannelBtn = document.getElementById("visitChannelBtn");
+
 const latestVideos = document.getElementById("latestVideos");
 
+const connectGoogleBtn = document.getElementById("connectGoogleBtn");
+const exploreTipsBtn = document.getElementById("exploreTipsBtn");
+const viewAllVideos = document.getElementById("viewAllVideos");
 
-// =====================================
-// NUMBER FORMATTER
-// =====================================
+
+// ==========================================
+// FORMAT NUMBERS
+// ==========================================
 
 function formatNumber(number) {
-  return Number(number || 0).toLocaleString("en-IN");
+  if (number === undefined || number === null) {
+    return "0";
+  }
+
+  return Number(number).toLocaleString("en-IN");
 }
 
 
-// =====================================
-// YOUTUBE API REQUEST
-// =====================================
+// ==========================================
+// API REQUEST
+// ==========================================
 
 async function youtubeRequest(endpoint, params = {}) {
 
-  if (
-    !YOUTUBE_API_KEY ||
-    YOUTUBE_API_KEY === "YOUR_YOUTUBE_API_KEY"
-  ) {
-    throw new Error("YouTube API key abhi add nahi hui hai.");
+  let apiUrl = "";
+
+  if (endpoint === "channels") {
+
+    apiUrl =
+      API_BASE +
+      "/api/channel?url=" +
+      encodeURIComponent(params.url);
+
+  } else if (endpoint === "playlistItems") {
+
+    apiUrl =
+      API_BASE +
+      "/api/videos?playlistId=" +
+      encodeURIComponent(params.playlistId);
+
+  } else {
+
+    throw new Error("Invalid API endpoint");
   }
 
-  const query = new URLSearchParams({
-    ...params,
-    key: YOUTUBE_API_KEY
-  });
-
-  const response = await fetch(
-    `https://www.googleapis.com/youtube/v3/${endpoint}?${query}`
-  );
+  const response = await fetch(apiUrl);
 
   const data = await response.json();
 
   if (!response.ok) {
     throw new Error(
-      data.error?.message || "YouTube API request failed."
+      data.error || "YouTube API request failed"
     );
+  }
+
+  if (endpoint === "channels") {
+    return { items: [data] };
   }
 
   return data;
 }
 
 
-// =====================================
-// CHANNEL ID FINDER
-// =====================================
+// ==========================================
+// FIND CHANNEL
+// ==========================================
 
 async function findChannel(channelLink) {
 
-  let input = channelLink.trim();
-
-  if (!input) {
-    throw new Error("YouTube channel link paste karo.");
+  if (!channelLink) {
+    throw new Error("Please enter a YouTube channel link.");
   }
 
-  let channelId = "";
+  const cleanLink = channelLink.trim();
 
-  try {
-
-    const url = new URL(
-      input.startsWith("http")
-        ? input
-        : "https://" + input
-    );
-
-    const parts = url.pathname.split("/").filter(Boolean);
-
-    if (parts[0] === "channel" && parts[1]) {
-      channelId = parts[1];
+  const response = await youtubeRequest(
+    "channels",
+    {
+      url: cleanLink
     }
-
-    if (!channelId && parts[0]?.startsWith("@")) {
-
-      const handle = parts[0].substring(1);
-
-      const result = await youtubeRequest(
-        "channels",
-        {
-          part: "snippet,statistics,contentDetails",
-          forHandle: handle
-        }
-      );
-
-      if (result.items?.length) {
-        return result.items[0];
-      }
-    }
-
-    if (!channelId && parts[0] === "user" && parts[1]) {
-
-      const result = await youtubeRequest(
-        "channels",
-        {
-          part: "snippet,statistics,contentDetails",
-          forUsername: parts[1]
-        }
-      );
-
-      if (result.items?.length) {
-        return result.items[0];
-      }
-    }
-
-  } catch (error) {
-
-    if (error.message.includes("API")) {
-      throw error;
-    }
-
-  }
-
-  if (channelId) {
-
-    const result = await youtubeRequest(
-      "channels",
-      {
-        part: "snippet,statistics,contentDetails",
-        id: channelId
-      }
-    );
-
-    if (result.items?.length) {
-      return result.items[0];
-    }
-
-  }
-
-  throw new Error(
-    "Channel nahi mila. Sahi YouTube channel link check karo."
   );
+
+  if (!response.items || response.items.length === 0) {
+    throw new Error("YouTube channel not found.");
+  }
+
+  return response.items[0];
 }
 
 
-// =====================================
-// LOAD CHANNEL DETAILS
-// =====================================
+// ==========================================
+// LOAD CHANNEL
+// ==========================================
 
 async function loadChannel(link) {
 
+  if (!link || !link.trim()) {
+    alert("Please enter a YouTube channel link.");
+    return;
+  }
+
+  const originalButtonText = loadChannelBtn
+    ? loadChannelBtn.textContent
+    : "";
+
+  if (loadChannelBtn) {
+    loadChannelBtn.disabled = true;
+    loadChannelBtn.textContent = "Loading...";
+  }
+
+  if (sidebarLoadBtn) {
+    sidebarLoadBtn.disabled = true;
+  }
+
   try {
 
-    channelName.textContent = "Loading...";
-    channelHandle.textContent = "Please wait...";
-    channelDescription.textContent = "Fetching channel details...";
+    latestVideos.innerHTML =
+      "<p>Loading channel videos...</p>";
 
-    subscriberCount.textContent = "...";
-    totalViews.textContent = "...";
-    totalVideos.textContent = "...";
+    channelName.textContent = "Loading...";
+    channelHandle.textContent = "";
+    channelDescription.textContent = "Please wait...";
 
     const channel = await findChannel(link);
 
     const snippet = channel.snippet;
-    const stats = channel.statistics;
+    const statistics = channel.statistics;
+    const contentDetails = channel.contentDetails;
 
-    const channelId = channel.id;
+    // CHANNEL NAME
 
-    // CHANNEL INFORMATION
+    channelName.textContent =
+      snippet.title || "Unknown Channel";
 
-    channelName.textContent = snippet.title;
+    // CHANNEL HANDLE
 
-    channelHandle.textContent =
-      snippet.customUrl || "YouTube Channel";
+    const handle = snippet.customUrl || "";
+
+    channelHandle.textContent = handle
+      ? handle.startsWith("@")
+        ? handle
+        : "@" + handle
+      : "";
+
+    // CHANNEL DESCRIPTION
 
     channelDescription.textContent =
       snippet.description || "No description available.";
 
     // CHANNEL IMAGE
 
-    const avatar =
-      snippet.thumbnails?.high?.url ||
-      snippet.thumbnails?.medium?.url ||
-      snippet.thumbnails?.default?.url;
+    if (snippet.thumbnails) {
 
-    if (avatar) {
+      const image =
+        snippet.thumbnails.high ||
+        snippet.thumbnails.medium ||
+        snippet.thumbnails.default;
 
-      channelAvatar.innerHTML = "";
-
-      const img = document.createElement("img");
-
-      img.src = avatar;
-      img.alt = snippet.title;
-
-      img.style.width = "100%";
-      img.style.height = "100%";
-      img.style.objectFit = "cover";
-      img.style.borderRadius = "50%";
-
-      channelAvatar.appendChild(img);
+      if (image) {
+        channelAvatar.src = image.url;
+      }
     }
 
-    // CHANNEL STATISTICS
+    // SUBSCRIBERS
 
-    subscriberCount.textContent =
-      stats.hiddenSubscriberCount
-        ? "Hidden"
-        : formatNumber(stats.subscriberCount);
+    if (statistics.hiddenSubscriberCount) {
+
+      subscriberCount.textContent = "Hidden";
+
+    } else {
+
+      subscriberCount.textContent =
+        formatNumber(statistics.subscriberCount);
+    }
+
+    // TOTAL VIEWS
 
     totalViews.textContent =
-      formatNumber(stats.viewCount);
+      formatNumber(statistics.viewCount);
+
+    // TOTAL VIDEOS
 
     totalVideos.textContent =
-      formatNumber(stats.videoCount);
+      formatNumber(statistics.videoCount);
 
-    // VISIT CHANNEL
+    // CHANNEL LINK
+
+    const channelId = channel.id;
 
     visitChannelBtn.href =
       "https://www.youtube.com/channel/" + channelId;
 
-    // LATEST VIDEOS
+    visitChannelBtn.target = "_blank";
 
-    await loadLatestVideos(
-      channel.contentDetails.relatedPlaylists.uploads
-    );
+    visitChannelBtn.rel = "noopener noreferrer";
 
     // SAVE CHANNEL ID
 
-    localStorage.setItem("lastChannelId", channelId);
+    localStorage.setItem(
+      "lastChannelId",
+      channelId
+    );
+
+    // SAVE CHANNEL URL
+
+    localStorage.setItem(
+      "lastChannelUrl",
+      link
+    );
+
+    // UPDATE INPUTS
+
+    if (channelInput) {
+      channelInput.value = link;
+    }
+
+    if (sidebarChannelInput) {
+      sidebarChannelInput.value = link;
+    }
+
+    // LOAD LATEST VIDEOS
+
+    const uploadsPlaylist =
+      contentDetails.relatedPlaylists.uploads;
+
+    if (uploadsPlaylist) {
+      await loadLatestVideos(uploadsPlaylist);
+    } else {
+      latestVideos.innerHTML =
+        "<p>No videos available.</p>";
+    }
 
   } catch (error) {
 
+    console.error("Channel Error:", error);
+
+    channelName.textContent = "Channel Not Found";
+
+    channelDescription.textContent =
+      error.message;
+
+    latestVideos.innerHTML =
+      "<p>Unable to load channel videos.</p>";
+
     alert(error.message);
 
-    console.error(error);
+  } finally {
 
-    channelName.textContent = "Channel Not Loaded";
-    channelHandle.textContent = "--";
-    channelDescription.textContent = error.message;
+    if (loadChannelBtn) {
+      loadChannelBtn.disabled = false;
+      loadChannelBtn.textContent =
+        originalButtonText || "Load Channel";
+    }
 
-    subscriberCount.textContent = "--";
-    totalViews.textContent = "--";
-    totalVideos.textContent = "--";
-
+    if (sidebarLoadBtn) {
+      sidebarLoadBtn.disabled = false;
+    }
   }
-
 }
 
 
-// =====================================
-// LATEST VIDEOS
-// =====================================
+// ==========================================
+// LOAD LATEST VIDEOS
+// ==========================================
 
 async function loadLatestVideos(playlistId) {
 
-  latestVideos.innerHTML =
-    '<div class="empty-state">Loading videos...</div>';
-
   try {
 
-    const playlist = await youtubeRequest(
+    latestVideos.innerHTML =
+      "<p>Loading latest videos...</p>";
+
+    const data = await youtubeRequest(
       "playlistItems",
       {
-        part: "snippet",
-        playlistId: playlistId,
-        maxResults: 5
+        playlistId: playlistId
       }
     );
 
     latestVideos.innerHTML = "";
 
-    if (!playlist.items?.length) {
+    if (!data.items || data.items.length === 0) {
 
-      latestVideos.textContent = "No videos found.";
+      latestVideos.innerHTML =
+        "<p>No videos found.</p>";
+
       return;
-
     }
 
-    playlist.items.forEach(item => {
+    data.items.forEach(item => {
 
       const video = item.snippet;
 
-      const videoId = video.resourceId.videoId;
+      const videoId =
+        video.resourceId.videoId;
 
-      const box = document.createElement("div");
+      const videoTitle =
+        video.title || "Untitled Video";
 
-      box.style.display = "flex";
-      box.style.gap = "12px";
-      box.style.alignItems = "center";
-      box.style.padding = "12px 0";
-      box.style.borderBottom = "1px solid #29233e";
+      const thumbnail =
+        video.thumbnails.medium ||
+        video.thumbnails.default;
+
+      // VIDEO CARD
+
+      const card = document.createElement("div");
+
+      card.className = "video-card";
+
+      // THUMBNAIL
 
       const image = document.createElement("img");
 
-      image.src =
-        video.thumbnails?.medium?.url || "";
+      image.src = thumbnail
+        ? thumbnail.url
+        : "";
 
-      image.style.width = "110px";
-      image.style.height = "65px";
-      image.style.objectFit = "cover";
-      image.style.borderRadius = "8px";
+      image.alt = videoTitle;
 
-      const details = document.createElement("div");
+      // TITLE
 
-      const title = document.createElement("p");
+      const title = document.createElement("h4");
 
-      title.textContent = video.title;
+      title.textContent = videoTitle;
 
-      title.style.fontSize = "12px";
-      title.style.fontWeight = "600";
+      // DATE
+
+      const date = document.createElement("p");
+
+      date.textContent =
+        video.publishedAt
+          ? new Date(
+              video.publishedAt
+            ).toLocaleDateString("en-IN")
+          : "";
+
+      // LINK
 
       const link = document.createElement("a");
 
@@ -330,117 +373,176 @@ async function loadLatestVideos(playlistId) {
         "https://www.youtube.com/watch?v=" + videoId;
 
       link.target = "_blank";
-      link.textContent = "Watch Video ↗";
 
-      link.style.color = "#bb79ff";
-      link.style.fontSize = "11px";
-      link.style.display = "inline-block";
-      link.style.marginTop = "7px";
+      link.rel = "noopener noreferrer";
 
-      details.appendChild(title);
-      details.appendChild(link);
+      link.textContent = "Watch Video";
 
-      box.appendChild(image);
-      box.appendChild(details);
+      // ADD ELEMENTS
 
-      latestVideos.appendChild(box);
+      card.appendChild(image);
+
+      card.appendChild(title);
+
+      card.appendChild(date);
+
+      card.appendChild(link);
+
+      latestVideos.appendChild(card);
 
     });
 
   } catch (error) {
 
-    latestVideos.textContent =
-      "Unable to load latest videos.";
+    console.error("Videos Error:", error);
 
-    console.error(error);
-
+    latestVideos.innerHTML =
+      "<p>Unable to load videos.</p>";
   }
+}
+
+
+// ==========================================
+// LOAD BUTTON EVENTS
+// ==========================================
+
+if (loadChannelBtn) {
+
+  loadChannelBtn.addEventListener("click", () => {
+
+    loadChannel(channelInput.value);
+
+  });
 
 }
 
 
-// =====================================
-// LOAD BUTTONS
-// =====================================
+if (sidebarLoadBtn) {
 
-loadChannelBtn.addEventListener("click", () => {
+  sidebarLoadBtn.addEventListener("click", () => {
 
-  loadChannel(channelInput.value);
+    loadChannel(sidebarChannelInput.value);
 
-});
+  });
 
-sidebarLoadBtn.addEventListener("click", () => {
-
-  channelInput.value = sidebarInput.value;
-
-  loadChannel(sidebarInput.value);
-
-});
+}
 
 
+// ==========================================
 // ENTER KEY SUPPORT
+// ==========================================
 
-channelInput.addEventListener("keydown", event => {
+if (channelInput) {
 
-  if (event.key === "Enter") {
-    loadChannel(channelInput.value);
-  }
+  channelInput.addEventListener("keypress", event => {
 
-});
+    if (event.key === "Enter") {
 
-sidebarInput.addEventListener("keydown", event => {
-
-  if (event.key === "Enter") {
-    loadChannel(sidebarInput.value);
-  }
-
-});
-
-
-// =====================================
-// OTHER BUTTONS
-// =====================================
-
-document.getElementById("connectGoogleBtn")
-  .addEventListener("click", () => {
-
-    alert(
-      "Google OAuth connection will be added in the next development stage."
-    );
-
-  });
-
-
-document.getElementById("exploreTipsBtn")
-  .addEventListener("click", () => {
-
-    alert(
-      "Creator growth tips will be added soon!"
-    );
-
-  });
-
-
-document.getElementById("viewAllVideos")
-  .addEventListener("click", () => {
-
-    alert(
-      "More video features are coming soon!"
-    );
-
-  });
-
-
-// =====================================
-// RESTORE LAST CHANNEL
-// =====================================
-
-const savedChannelId =
-  localStorage.getItem("lastChannelId");
-
-if (savedChannelId) {
-
-  channelInput.value =
-    "https://www.youtube.com/channel/" + savedChannelId;
+      loadChannel(channelInput.value);
 
     }
+
+  });
+
+}
+
+
+if (sidebarChannelInput) {
+
+  sidebarChannelInput.addEventListener("keypress", event => {
+
+    if (event.key === "Enter") {
+
+      loadChannel(sidebarChannelInput.value);
+
+    }
+
+  });
+
+}
+
+
+// ==========================================
+// CONNECT GOOGLE BUTTON
+// ==========================================
+
+if (connectGoogleBtn) {
+
+  connectGoogleBtn.addEventListener("click", () => {
+
+    alert(
+      "Google OAuth integration is coming soon!"
+    );
+
+  });
+
+}
+
+
+// ==========================================
+// EXPLORE TIPS BUTTON
+// ==========================================
+
+if (exploreTipsBtn) {
+
+  exploreTipsBtn.addEventListener("click", () => {
+
+    alert(
+      "Creator growth tips are coming soon!"
+    );
+
+  });
+
+}
+
+
+// ==========================================
+// VIEW ALL VIDEOS
+// ==========================================
+
+if (viewAllVideos) {
+
+  viewAllVideos.addEventListener("click", () => {
+
+    alert(
+      "More video analytics are coming soon!"
+    );
+
+  });
+
+}
+
+
+// ==========================================
+// RESTORE LAST CHANNEL
+// ==========================================
+
+window.addEventListener("DOMContentLoaded", () => {
+
+  const savedUrl =
+    localStorage.getItem("lastChannelUrl");
+
+  if (savedUrl) {
+
+    if (channelInput) {
+      channelInput.value = savedUrl;
+    }
+
+    if (sidebarChannelInput) {
+      sidebarChannelInput.value = savedUrl;
+    }
+
+    loadChannel(savedUrl);
+
+  }
+
+});
+
+
+// ==========================================
+// DASHBOARD READY
+// ==========================================
+
+console.log(
+  "YouTube Creator Dashboard Loaded Successfully!"
+);
