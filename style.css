@@ -690,3 +690,32 @@ footer {
 #chartArea {
   min-height: 180px;
 }
+/* ANALYTICS CHART FIX */
+
+.analytics-card {
+  height: auto !important;
+  overflow: hidden;
+}
+
+#chartArea {
+  display: block !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 16px 0 20px;
+  overflow: visible;
+}
+
+.views-chart {
+  width: 100%;
+  padding: 10px 0;
+}
+
+.chart-summary {
+  margin-bottom: 25px;
+}
+
+.chart-note {
+  margin-top: 24px;
+  margin-bottom: 5px;
+  line-height: 1.6;
+}
