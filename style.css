@@ -620,3 +620,73 @@ footer {
     text-align: center;
   }
     }
+/* ==================================
+   YOUTUBE ANALYTICS CHART
+================================== */
+
+.views-chart {
+  width: 100%;
+  padding: 20px 0;
+}
+
+.chart-summary {
+  margin-bottom: 25px;
+}
+
+.chart-summary h3 {
+  color: #ffffff;
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.chart-summary p {
+  color: #a78bfa;
+  font-size: 14px;
+}
+
+.chart-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.chart-label {
+  width: 65px;
+  min-width: 65px;
+  color: #c4b5fd;
+  font-size: 13px;
+}
+
+.chart-bar-container {
+  flex: 1;
+  height: 13px;
+  background: #211b35;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.chart-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #756cff, #bd75ff);
+  border-radius: 20px;
+  transition: width 0.8s ease;
+}
+
+.chart-count {
+  width: 55px;
+  text-align: right;
+  color: #ffffff;
+  font-size: 12px;
+}
+
+.chart-note {
+  color: #858094;
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: 22px;
+}
+
+#chartArea {
+  min-height: 180px;
+}
